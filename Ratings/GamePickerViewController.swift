@@ -1,21 +1,32 @@
 //
-//  PlayersViewController.swift
+//  GamePickerViewController.swift
 //  Ratings
 //
-//  Created by HaYoung on 2017. 1. 25..
+//  Created by HaYoung on 2017. 2. 1..
 //  Copyright © 2017년 HaYoung. All rights reserved.
 //
 
 import UIKit
 
-let playersData = [
-    Player(name:"Bill Evans", game:"Tic-Tac-Toe", rating: 4),
-    Player(name: "Oscar Peterson", game: "Spin the Bottle", rating: 5),
-    Player(name: "Dave Brubeck", game: "Texas Hold 'em Poker", rating: 2) ]
-
-class PlayersViewController: UITableViewController {
+class GamePickerViewController: UITableViewController {
     
-    var players: [Player] = playersData
+    let games:[String] = [
+        "Angry Birds",
+        "Chess",
+        "Russian Roulette",
+        "Spin the Bottle",
+        "Texas Hold'em Poker",
+        "Tic-Tac-Toe"]
+    
+    var selectedGameIndex: Int?
+    
+    var selectedGame: String? {
+        didSet {
+            if let game = selectedGame {
+                selectedGameIndex = games.index(of: game)!
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,44 +43,56 @@ class PlayersViewController: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    
-    @IBAction func cancelToPlayersViewController(segue: UIStoryboardSegue) {
-        
-    }
-    
-    @IBAction func savePlayerDetail(segue: UIStoryboardSegue) {
-        
-        //players 배열에 새로운 player 추가
-        if let playerDetailsViewController = segue.source as? PlayerDetailsViewController {
-            if let player = playerDetailsViewController.player {
-                players.append(player)
-                
-                //tableView 갱신
-                let indexPath = IndexPath(row: players.count - 1, section: 0)
-                tableView.insertRows(at: [indexPath], with: .automatic)
-            }
-        }
-    }
-    
     // MARK: - Table view data source
-    // Dynamic prototype 일때만 구현
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return players.count
+        // #warning Incomplete implementation, return the number of rows
+        return games.count
     }
+
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "GameCell", for: indexPath)
+        cell.textLabel?.text = games[indexPath.row]
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "PlayerCell", for: indexPath) as! PlayerCell
-        let player = players[indexPath.row]
-        cell.player = player
+        if indexPath.row == selectedGameIndex {
+            cell.accessoryType = .checkmark
+        } else {
+            cell.accessoryType = .none
+        }
         
         return cell
     }
-}
-
     
     
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        //회색으로 강조 표시된 색상에서 일반 흰색으로 되돌아간다.
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        //Other row is selected - need to deselect it
+        //이전에 선택한 셀에서 체크 표시를 제거
+        if let index = selectedGameIndex {
+            let cell = tableView.cellForRow(at: IndexPath(row: index, section: 0))
+            cell?.accessoryType = .none
+        }
+        
+        selectedGame = games[indexPath.row]
+        
+        //update the checkmark for the current row
+        let cell = tableView.cellForRow(at: indexPath)
+        cell?.accessoryType = .checkmark
+    }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "SaveSelectedGame" {
+            if let cell = sender as? UITableViewCell {
+                let indexPath = tableView.indexPath(for: cell)
+                if let index = indexPath?.row {
+                    selectedGame = games[index]
+                }
+            }
+        }
+    }
 
     /*
     // Override to support conditional editing of the table view.
@@ -116,4 +139,4 @@ class PlayersViewController: UITableViewController {
     }
     */
 
-
+}
